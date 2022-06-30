@@ -1,3 +1,5 @@
 README.me
 .ipynb_checkpoints/**
+.spyproject/**
 .gitignore
+Nils Test.ipynb
