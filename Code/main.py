@@ -7,12 +7,8 @@ Erstellt am 30.06.2022
 Das Hauptskript. Soll später als Jupyter-Notebook umgesetzt werden.
 """
 import pandas as pd
+import config as c
 
-PATH = r"C:\Users\heimb\Desktop\Master\2. Semester\5. Python Applied Modells\Projektaufgabe\Datenquellen_Referat_Regression"
-PATH_TEMP = PATH+"\\TemperaturZeitreihe.json"
-
-df_temp = pd.read_json(PATH+"\\TemperaturZeitreihe.json")
-df_co2 = pd.read_csv(PATH+"\\fossil-fuel-co2-emissions-by-nation.csv")
 
 def main_nils():
     def read_json(PATH):
@@ -39,7 +35,7 @@ def main_nils():
         df = float_into_df(FLOAT)
         return df
 
-    df = load_temp(PATH_TEMP)
+    df = load_temp(c.PATH+"TemperaturZeitreihe.json")
     print(df)
 
 
