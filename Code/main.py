@@ -6,11 +6,20 @@ Erstellt am 30.06.2022
 
 Das Hauptskript. Soll später als Jupyter-Notebook umgesetzt werden.
 """
-import pandas as pd
-import config as c
+
+# import config as c
 
 import os
 import pandas as pd
+import json
+
+
+def load_config(filepath):
+    """Einlesen der Konfigurationsdatei aus angebenen Pfad."""
+    with open(filepath, 'r') as c:
+        config = json.load(c)
+    return config
+
 
 
 def main_nils():
@@ -37,16 +46,28 @@ def main_nils():
         FLOAT = monthly_temp_into_yearly_mean(df)
         df = float_into_df(FLOAT)
         return df
-
-    df = load_temp(c.PATH+"TemperaturZeitreihe.json")
+    
+    # Konfigurationsdatei einlesen
+    CONFIG_FILEPATH = r'D:\HS Albstadt\Sommersemester 2022' \
+        r'\Python Applied Models\Abschlussaufgabe\Data\Input\Config.json'
+    config = load_config(CONFIG_FILEPATH)
+    
+    
+    filepath = os.path.join(config['Input_Directory'],
+                            config['Filename_Temperature'])
+    df = load_temp(filepath)
     print(df)
 
 
 
 def main_christian():
-    FILENAME = 'fossil-fuel-co2-emissions-by-nation.csv'
-    DIRECTORY = r'../Data/Input'
-    filepath = os.path.join(DIRECTORY, FILENAME)
+    # Konfigurationsdatei einlesen
+    CONFIG_FILEPATH = r'D:\HS Albstadt\Sommersemester 2022' \
+        r'\Python Applied Models\Abschlussaufgabe\Data\Input\Config.json'
+    config = load_config(CONFIG_FILEPATH)
+    
+    filepath = os.path.join(config['Input_Directory'],
+                            config['Filename_Fossil_Fuel'])
     
     # Datensatz einlesen
     df_input = pd.read_csv(filepath)
@@ -69,6 +90,8 @@ def main_christian():
     # Für jedes Jahr die Summe der Emissionen erstellen
     for year in range(1945, 1991):
         subset = df.loc[year]
+        # Ausreißer in den Jahren 1945 & 1946 werden nicht entfernt,
+        # da vernachlässigbar klein
         emissions = subset['Total'].sum()
         df_year = pd.DataFrame({'Year': [year],
                                 'Country': ['GERMANY'],
@@ -87,7 +110,7 @@ def main_christian():
     df_summed = df_summed[df_summed['Country'] == 'GERMANY']
     
     df_summed = df_summed.sort_values(by='Year').set_index('Year')
-    print(df_summed.loc[1946])
+    # print(df_summed.loc[1990])
     
     df_final = df_summed.reset_index()
     print(df_final)
