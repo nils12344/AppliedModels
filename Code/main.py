@@ -7,7 +7,7 @@ Erstellt am 30.06.2022
 Das Hauptskript. Soll später als Jupyter-Notebook umgesetzt werden.
 """
 
-import config as c
+# import config as c
 import os
 import pandas as pd
 import json
