@@ -78,14 +78,16 @@ def main_christian():
     df_sum_emissions.set_index('Year', inplace=True)
     
     # Zusammenfügen der Daten
-    df = df.reset_index()
+    df = df.drop(index=range(1945, 1991))
+    df.reset_index(inplace=True)
+    
     df_sum_emissions = df_sum_emissions.reset_index()
     df_summed = pd.concat([df, df_sum_emissions])
         
     df_summed = df_summed[df_summed['Country'] == 'GERMANY']
     
     df_summed = df_summed.sort_values(by='Year').set_index('Year')
-    print(df_summed.loc[1945])
+    print(df_summed.loc[1946])
     
     df_final = df_summed.reset_index()
     print(df_final)
