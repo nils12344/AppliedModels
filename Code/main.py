@@ -11,6 +11,7 @@ import config as c
 
 
 def main_nils():
+
     def read_json(PATH):
         df = pd.read_json(PATH)
         return df
@@ -37,7 +38,6 @@ def main_nils():
 
     df = load_temp(c.PATH+"TemperaturZeitreihe.json")
     print(df)
-
 
 
 def main_christian():
