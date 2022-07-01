@@ -20,8 +20,14 @@ def load_config(filepath):
     return config
 
 
-
 def main_nils():
+
+    def load_temp(path):
+        df = read_json(path)
+        df = extract_mean_GISTEMP(df)
+        FLOAT = monthly_temp_into_yearly_mean(df)
+        df = float_into_df(FLOAT)
+        return df
 
     def read_json(PATH):
         df = pd.read_json(PATH)
@@ -40,19 +46,11 @@ def main_nils():
         df = df.reset_index(level=0)
         return df
 
-    def load_temp(path):
-        df = read_json(path)
-        df = extract_mean_GISTEMP(df)
-        FLOAT = monthly_temp_into_yearly_mean(df)
-        df = float_into_df(FLOAT)
-        return df
-    
     # Konfigurationsdatei einlesen
     CONFIG_FILEPATH = r'D:\HS Albstadt\Sommersemester 2022' \
         r'\Python Applied Models\Abschlussaufgabe\Data\Input\Config.json'
     config = load_config(CONFIG_FILEPATH)
-    
-    
+
     filepath = os.path.join(config['Input_Directory'],
                             config['Filename_Temperature'])
     df = load_temp(filepath)
@@ -62,36 +60,47 @@ def main_nils():
     # df_cd = pd.merge(df_temp, df_co2, how='inner', on = 'Date')
 
 
-def main_christian():
+# Für Datei Fossil_Fuel
+def import_and_prepare_fossil_fuel_dataframe(config):
+    df_input = load_fossil_fuel_data_to_dataframe(config)
+    df_input = extract_fossil_fuel_columns(df_input)
+    df_country = filter_country_germany(df_input)
+    df_country.set_index('Year', inplace=True)
+    df_sum_emissions = aggregate_west_and_east_germany(df_country)
+    df_fossil_fuel = merge_sum_emissions_and_normal_country_dataframe(
+        df_country, df_sum_emissions)
+    return df_fossil_fuel
 
-    # Konfigurationsdatei einlesen
-    CONFIG_FILEPATH = r'D:\HS Albstadt\Sommersemester 2022' \
-        r'\Python Applied Models\Abschlussaufgabe\Data\Input\Config.json'
-    config = load_config(CONFIG_FILEPATH)
-    
+
+def load_fossil_fuel_data_to_dataframe(config):
     filepath = os.path.join(config['Input_Directory'],
                             config['Filename_Fossil_Fuel'])
-    # Datensatz einlesen
     df_input = pd.read_csv(filepath)
+    return df_input
 
-    # Entfernen aller überflüssigen Spalten
-    df = df_input.iloc[:, :3]
 
-    # Extrahieren von Deutschland
-    df = df[(df['Country'] == 'GERMANY') |
-            (df['Country'] == 'FORMER GERMAN DEMOCRATIC REPUBLIC') |
-            (df['Country'] == 'FEDERAL REPUBLIC OF GERMANY')]
+def extract_fossil_fuel_columns(df_fossil_fuel):
+    df_res = df_fossil_fuel.iloc[:, :3]
+    return df_res
 
-    # Jahr als Index setzen
-    df = df.set_index('Year')
 
-    # Zusammenfügen der beiden Werte von 1945 bis 1990
+def filter_country_germany(df_fossil_fuel):
+    df_germany = df_fossil_fuel[(df_fossil_fuel['Country'] == 'GERMANY') |
+                                (df_fossil_fuel['Country'] ==
+                                 'FORMER GERMAN DEMOCRATIC REPUBLIC') |
+                                (df_fossil_fuel['Country'] ==
+                                 'FEDERAL REPUBLIC OF GERMANY')]
+    return df_germany
+
+
+# TODO: Funktion aufspalten
+def aggregate_west_and_east_germany(df_fossil_fuel):
     # Kopie erstellen und filtern
-    df_sum_emissions = pd.DataFrame(index=df.index.copy())
+    df_sum_emissions = pd.DataFrame(index=df_fossil_fuel.index.copy())
     df_sum_emissions = df_sum_emissions.iloc[1945:1990]
     # Für jedes Jahr die Summe der Emissionen erstellen
     for year in range(1945, 1991):
-        subset = df.loc[year]
+        subset = df_fossil_fuel.loc[year]
         # Ausreißer in den Jahren 1945 & 1946 werden nicht entfernt,
         # da vernachlässigbar klein
         emissions = subset['Total'].sum()
@@ -100,23 +109,54 @@ def main_christian():
                                 'Total': [emissions]})
         # Jahre 1945-1990 in einen Dataframe packen
         df_sum_emissions = pd.concat([df_sum_emissions, df_year])
+    # Index setzen
     df_sum_emissions.set_index('Year', inplace=True)
+    return df_sum_emissions
 
-    # Zusammenfügen der Daten
-    df = df.drop(index=range(1945, 1991))
-    df.reset_index(inplace=True)
 
+def merge_sum_emissions_and_normal_country_dataframe(df_germany,
+                                                     df_sum_emissions):
+    # Jahre 1945 bis 1990 aus gesamten Frame entfernen
+    df_germany = df_germany.drop(index=range(1945, 1991))
+    df_germany.reset_index(inplace=True)
+
+    # Datensätze zusammenfügen
     df_sum_emissions = df_sum_emissions.reset_index()
-    df_summed = pd.concat([df, df_sum_emissions])
+    df_merged = pd.concat([df_germany, df_sum_emissions])
 
-    df_summed = df_summed[df_summed['Country'] == 'GERMANY']
+    # Werte nach Jahr sortieren
+    df_final = df_merged.sort_values(by='Year')
 
-    df_summed = df_summed.sort_values(by='Year').set_index('Year')
+    return df_final
 
-    df_final = df_summed.reset_index()
-    print(df_final)
+
+def main():
+    # Konfigurationsdatei laden
+    CONFIG_FILEPATH = r'D:\HS Albstadt\Sommersemester 2022' \
+        r'\Python Applied Models\Abschlussaufgabe\Data\Input\Config.json'
+    config = load_config(CONFIG_FILEPATH)
+
+    # Fossil-Fuel-Daten einlesen
+    df_fossil_fuel = import_and_prepare_fossil_fuel_dataframe(config)
+    print(df_fossil_fuel)
+
+    # Temperaturdaten einlesen
+
+    # Datensätze zusammenfügen
+
+    # Tabelle zur Validierung in Datei abspeichern
+
+    # Visualisierung von CO2-Daten und Temperaturabweichung
+
+    # Abspeichern der Visualisierung
+
+    # Ausreißer in Daten behandeln
+
+    # Durchführen einer Regression
+
+    # Abspeichern der Regression
 
 
 if __name__ == '__main__':
+    main()
     main_nils()
-    main_christian()
