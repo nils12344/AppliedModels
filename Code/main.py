@@ -42,7 +42,7 @@ def main_nils():
     print(df)
 
     # joining dataframe temperatur and dataframe co2
-    # df_cd = pd.merge(df_temp, df_co2, how='inner', on = 'Date')
+    # df_merged = pd.merge(df_temp, df_co2, how='inner', on = 'Date')
 
 
 def main_christian():
