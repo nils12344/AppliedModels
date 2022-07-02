@@ -3,5 +3,25 @@
     "Output_Directory": "D:\\HS Albstadt\\Sommersemester 2022\\Python Applied Models\\Abschlussaufgabe\\Data\\Output",
     "Filename_Fossil_Fuel": "fossil-fuel-co2-emissions-by-nation.csv",
     "Filename_Temperature": "TemperaturZeitreihe.json",
-    "Log_Filename": "Log.txt"
+    "Temperature_Source": "GISTEMP",
+    "Log_Filename": "Log.txt",
+    "Regression_Formula": "Mean ~ 1 + Total",
+    
+    "Regression_Models": {
+        "Regression_1": {
+            "Formula": "Mean ~ -1 + Total",
+            "Teil_Zeitraeume": "None",
+            "Validation_Sample": "None"
+        },
+        "Regression_2": {
+            "Formula": "Mean ~ 1 + Total",
+            "Teil_Zeitraeume": "1890-2000",
+            "Validation_Sample": "None"
+        },
+        "Regression_3": {
+            "Formula": "Mean ~ 1 + Total",
+            "Teil_Zeitraeume": "None",
+            "Validation_Sample": "2000-2012"
+        }
+    }
 }
