@@ -47,13 +47,13 @@ def visualize_validation_sample(df_validation, predictions):
 def visualize_regression_results(df, regression_model):
     parameters = regression_model.params
     # generate x-values for your regression line (two is sufficient)
-    x = np.arange(0, 350000)
+    x = np.arange(df['Total'].min(), df['Total'].max())
     # scatter-plot data
     ax = df.plot(x='Total', y='Mean', kind='scatter')
     # plot regression line on the same axes, set x-axis limits
     try:
-        ax.plot(x, parameters.Intercept + parameters.Total * x)
+        ax.plot(x, parameters.Intercept + parameters.Total * x, color='r')
     except AttributeError:
-        ax.plot(x, parameters.Total * x)
+        ax.plot(x, parameters.Total * x, color='r')
     plt.title('Regression Results')
     plt.show()

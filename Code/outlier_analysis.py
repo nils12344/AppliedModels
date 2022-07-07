@@ -41,7 +41,7 @@ def calc_outliers_with_z_score(data, column):
 def print_outliers_from_z_score(z_scores, threshold, column):
     print("Outliers in Column", column + ":", np.where(z_scores > threshold))
     logging.info("Anzahl der Ausreißer über dem Treshhold von %i sind %i .",
-                 threshold, len(np.where(z_scores > threshold)-1))
+                 threshold, len(np.where(z_scores > threshold))-1)
 
 
 def calc_and_print_outliers_with_iqr(data, column, threshold=1.5):

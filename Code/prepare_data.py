@@ -43,17 +43,26 @@ def series_into_df(series):
 # Für Datei Fossil_Fuel
 def prepare_fossil_fuel_dataframe(config, df_fossil_fuel):
     df_input = extract_fossil_fuel_columns(df_fossil_fuel)
-    df_country = filter_country_germany(df_input)
-    df_country.set_index('Year', inplace=True)
-    df_sum_emissions = aggregate_west_and_east_germany(df_country)
-    df_fossil_fuel = merge_sum_emissions_and_normal_country_dataframe(
-        df_country, df_sum_emissions)
+    country = config['Fossil_Fuel_Country']
+    if country == "GERMANY":
+        df_country = filter_country_germany(df_input)
+        df_country.set_index('Year', inplace=True)
+        df_sum_emissions = aggregate_west_and_east_germany(df_country)
+        df_fossil_fuel = merge_sum_emissions_and_normal_country_dataframe(
+            df_country, df_sum_emissions)
+    else:
+        df_fossil_fuel = filter_country(df_fossil_fuel, country)
     return df_fossil_fuel
 
 
 def extract_fossil_fuel_columns(df_fossil_fuel):
     df_res = df_fossil_fuel.iloc[:, :3]
     return df_res
+
+
+def filter_country(df_fossil_fuel, country):
+    df_country = df_fossil_fuel[df_fossil_fuel['Country'] == country]
+    return df_country
 
 
 def filter_country_germany(df_fossil_fuel):
