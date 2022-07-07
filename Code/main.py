@@ -158,8 +158,8 @@ def main():
     outlier.calc_and_print_outliers_with_z_score(data=df_final, column='Total')
 
     # Ausreißer (Spikes) mittels Interquartilabstand
-    logging.info('Ausreißer (Spikes) werden mit Hilfe des Interquartil für die'
-                 ' Spalte "Total" errechnet.')
+    logging.info('Ausreißer (Spikes) werden mit Hilfe des Interquartilabstands'
+                 ' für die Spalte "Total" errechnet.')
     outlier.calc_and_print_outliers_with_iqr(data=df_final, column='Mean')
     logging.info('Ausreißer (Spikes) werden mit Hilfe des Interquantilabstands'
                  ' für die Spalte "Total" errechnet.')

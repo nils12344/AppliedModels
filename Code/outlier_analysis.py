@@ -56,8 +56,8 @@ def calc_outliers_with_iqr(data, column, threshold):
     upper = data[column] >= (q3 + threshold*iqr)
     # Below Lower bound
     lower = data[column] <= (q1 - threshold*iqr)
-    logging.info('Anzahl der Ausreißer über dem Treshhold %i .', upper)
-    logging.info("Anzahl der Ausreißer unter dem Treshhold %i .", lower)
+    logging.info('Anzahl der Ausreißer über dem Treshhold %i .', upper.sum())
+    logging.info("Anzahl der Ausreißer unter dem Treshhold %i .", lower.sum())
     return upper, lower
 
 
