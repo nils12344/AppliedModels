@@ -13,7 +13,7 @@ import statsmodels.formula.api as smf
 
 
 def fit_regression_model(config, data):
-    regression_model = smf.ols(formula=config['Regression_Formula'],
+    regression_model = smf.ols(formula=config['Formula'],
                                data=data).fit()
 
     return regression_model

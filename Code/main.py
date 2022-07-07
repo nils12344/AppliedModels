@@ -10,6 +10,8 @@ Das Hauptskript. Soll später als Jupyter-Notebook umgesetzt werden.
 import os
 import logging
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
 import config as c
 import load_data as load
@@ -17,6 +19,7 @@ import prepare_data as prep
 import data_visualization as vis
 import outlier_analysis as outlier
 import regression as reg
+import linear_regression_diagnostics as diagnostics
 
 
 def main():
@@ -138,27 +141,94 @@ def main():
 
     # Durchführen einer Regression (-1, um Intercept zu entfernen
     # I(Total**3) für kubischen Term)
-    regression_model = reg.fit_regression_model(config=config, data=df_final)
-    print(regression_model.summary())
-    print(regression_model.params)     # Koeffizienten
-    print(regression_model.rsquared)     # R2-Wert
-
-    # Abspeichern der Regressionsergebnisse als .csv
-    reg.save_regression_results_as_csv(model=regression_model,
-                                       run_directory=run_directory,
-                                       filename='Regression_Results.csv')
-
-    # Gesamte Summary abspeichern
-    reg.save_regression_summary_as_csv(model=regression_model,
-                                       run_directory=run_directory,
-                                       filename='Regression_Summary.csv')
-
-    # TODO: Einpflegen in Regression
     models = config["Regression_Models"]
     for key, value in models.items():
-        print(key, value['Formula'])
+        # Unterverzeichnis anlegen
+        model_directory = os.path.join(run_directory, key)
+        os.mkdir(model_directory)
 
-    # Erweiterung um Überprüfung der Annahmen der Regression
+        df_teil_zeitraum = df_final
+        df_validation = None
+
+        # Teilzeitraum bestimmen
+        zeitraum = value['Teil_Zeitraeume']
+        start_stop = zeitraum.split('-')
+        if len(start_stop) > 1:
+            start = int(start_stop[0])
+            stop = int(start_stop[1])
+            teil_zeitraum = list(range(start, stop+1))
+
+            # Datensatz nach Teilzeitraum filtern
+            df_teil_zeitraum = df_final[df_final['Year'].isin(teil_zeitraum)]
+
+        # Validation Sample
+        zeitraum = value['Validation_Sample']
+        start_stop = zeitraum.split('-')
+        if len(start_stop) > 1:
+            start = int(start_stop[0])
+            stop = int(start_stop[1])
+            teil_zeitraum = list(range(start, stop+1))
+
+            # Extra Datensatz f+r Validierungssample
+            df_validation = df_final[df_final['Year'].isin(teil_zeitraum)]
+            X_val = df_validation['Total']
+
+        regression_model = reg.fit_regression_model(config=value,
+                                                    data=df_teil_zeitraum)
+
+        # Validierung durchführen
+        if df_validation is not None:
+            predictions = regression_model.predict(X_val)
+            print(predictions)
+
+            fig, ax = plt.subplots()
+            ax.plot(df_validation['Total'], df_validation['Mean'], "o",
+                    label="True")
+            ax.plot(df_validation['Total'], predictions, "o",
+                    label="Predictions")
+            ax.legend(loc="best")
+            plt.title('Visualization of the validation sample')
+            plt.xlabel('Total')
+            plt.ylabel('Mean')
+            plt.show()
+            vis.savefig(model_directory, 'Validation_Results')
+
+        print(regression_model.summary())
+        print(regression_model.params)     # Koeffizienten
+        print(regression_model.rsquared)     # R2-Wert
+
+        # Grafische Darstellung des Ergebnisses
+        parameters = regression_model.params
+        # generate x-values for your regression line (two is sufficient)
+        x = np.arange(0, 350000)
+        # scatter-plot data
+        ax = df_final.plot(x='Total', y='Mean', kind='scatter')
+        # plot regression line on the same axes, set x-axis limits
+        try:
+            ax.plot(x, parameters.Intercept + parameters.Total * x)
+        except AttributeError:
+            ax.plot(x, parameters.Total * x)
+        plt.title('Regression Results')
+        plt.show()
+        vis.savefig(model_directory, 'Regression_Results')
+
+        # Abspeichern der Regressionsergebnisse als .csv
+        filename = str(key) + '_Regression'
+        reg.save_regression_results_as_csv(model=regression_model,
+                                           run_directory=model_directory,
+                                           filename=filename+'_Results.csv')
+
+        # Gesamte Summary abspeichern
+        reg.save_regression_summary_as_csv(model=regression_model,
+                                           run_directory=model_directory,
+                                           filename=filename+'_Summary.csv')
+
+        # Erweiterung um Überprüfung der Annahmen der Regression
+        cls = diagnostics.Linear_Reg_Diagnostic(regression_model)
+        fig, ax = cls()
+
+    # Logger abschalten
+    logging.shutdown()
 
 
 if __name__ == '__main__':
