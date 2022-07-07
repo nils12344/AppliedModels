@@ -31,3 +31,10 @@ def create_run_directory(config):
     os.mkdir(Run_Directory)
 
     return Run_Directory
+
+
+def create_model_directory(run_directory, model_name):
+    model_directory = os.path.join(run_directory, model_name)
+    os.mkdir(model_directory)
+
+    return model_directory

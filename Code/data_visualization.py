@@ -10,6 +10,7 @@ Datei mit Funktionen zur Visualisierung des Datensets.
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 
 def show_scatterplot(x, y, data, title):
@@ -28,3 +29,31 @@ def show_regressionplot(x, y, data, title, order=1):
 
 def savefig(save_directory, filename):
     plt.savefig(os.path.join(save_directory, filename))
+
+
+def visualize_validation_sample(df_validation, predictions):
+    fig, ax = plt.subplots()
+    ax.plot(df_validation['Total'], df_validation['Mean'], "o",
+            label="True")
+    ax.plot(df_validation['Total'], predictions, "o",
+            label="Predictions")
+    ax.legend(loc="best")
+    plt.title('Visualization of the validation sample')
+    plt.xlabel('Total')
+    plt.ylabel('Mean')
+    plt.show()
+
+
+def visualize_regression_results(df, regression_model):
+    parameters = regression_model.params
+    # generate x-values for your regression line (two is sufficient)
+    x = np.arange(0, 350000)
+    # scatter-plot data
+    ax = df.plot(x='Total', y='Mean', kind='scatter')
+    # plot regression line on the same axes, set x-axis limits
+    try:
+        ax.plot(x, parameters.Intercept + parameters.Total * x)
+    except AttributeError:
+        ax.plot(x, parameters.Total * x)
+    plt.title('Regression Results')
+    plt.show()
