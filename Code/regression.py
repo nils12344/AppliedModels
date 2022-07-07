@@ -34,3 +34,14 @@ def save_regression_summary_as_csv(model, run_directory, filename):
     df_summary = pd.read_html(results_as_html, header=0, index_col=0)[0]
     filepath = os.path.join(run_directory, filename)
     df_summary.to_csv(filepath)
+
+
+def get_teil_zeitraum_from_config(value):
+    teil_zeitraum = None
+    zeitraum = value
+    start_end = zeitraum.split('-')
+    if len(start_end) > 1:
+        start = int(start_end[0])
+        end = int(start_end[1])
+        teil_zeitraum = list(range(start, end+1))
+    return teil_zeitraum

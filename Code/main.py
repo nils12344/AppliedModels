@@ -10,8 +10,6 @@ Das Hauptskript. Soll später als Jupyter-Notebook umgesetzt werden.
 import os
 import logging
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
 
 import config as c
 import load_data as load
@@ -65,8 +63,8 @@ def main():
     # Tabelle zur Validierung in Datei abspeichern (.csv)
     filepath = os.path.join(run_directory, 'merged_dataset.csv')
     df_merged.to_csv(filepath)
-    logging.info('Der zusammengeführte Datensatz wurde unter {0}'
-                 ' gespeichert.'.format(filepath))
+    logging.info('Der zusammengeführte Datensatz wurde unter %s'
+                 ' gespeichert.', filepath)
 
     # Visualisierung von CO2-Daten und Temperaturabweichung
     # Verlauf von Temperatur
@@ -181,72 +179,41 @@ def main():
     models = config["Regression_Models"]
     for key, value in models.items():
         # Unterverzeichnis anlegen
-        model_directory = os.path.join(run_directory, key)
-        os.mkdir(model_directory)
+        model_directory = c.create_model_directory(run_directory, key)
 
         df_teil_zeitraum = df_final
         df_validation = None
 
         # Teilzeitraum bestimmen
-        zeitraum = value['Teil_Zeitraeume']
-        start_stop = zeitraum.split('-')
-        if len(start_stop) > 1:
-            start = int(start_stop[0])
-            stop = int(start_stop[1])
-            teil_zeitraum = list(range(start, stop+1))
-
-            # Datensatz nach Teilzeitraum filtern
+        teil_zeitraum = reg.get_teil_zeitraum_from_config(
+            value['Teil_Zeitraeume'])
+        # Datensatz nach Teilzeitraum filtern
+        if teil_zeitraum is not None:
             df_teil_zeitraum = df_final[df_final['Year'].isin(teil_zeitraum)]
 
         # Validation Sample
-        zeitraum = value['Validation_Sample']
-        start_stop = zeitraum.split('-')
-        if len(start_stop) > 1:
-            start = int(start_stop[0])
-            stop = int(start_stop[1])
-            teil_zeitraum = list(range(start, stop+1))
-
-            # Extra Datensatz f+r Validierungssample
+        teil_zeitraum = reg.get_teil_zeitraum_from_config(
+            value['Validation_Sample'])
+        # Extra Datensatz für Validierungssample
+        if teil_zeitraum is not None:
             df_validation = df_final[df_final['Year'].isin(teil_zeitraum)]
-            X_val = df_validation['Total']
+            x_val = df_validation['Total']
 
+        # Regression durchführen
         regression_model = reg.fit_regression_model(config=value,
                                                     data=df_teil_zeitraum)
 
         # Validierung durchführen
         if df_validation is not None:
-            predictions = regression_model.predict(X_val)
-            print(predictions)
-
-            fig, ax = plt.subplots()
-            ax.plot(df_validation['Total'], df_validation['Mean'], "o",
-                    label="True")
-            ax.plot(df_validation['Total'], predictions, "o",
-                    label="Predictions")
-            ax.legend(loc="best")
-            plt.title('Visualization of the validation sample')
-            plt.xlabel('Total')
-            plt.ylabel('Mean')
-            plt.show()
+            predictions = regression_model.predict(x_val)
+            # Grafische Darstellung
+            vis.visualize_validation_sample(df_validation, predictions)
             vis.savefig(model_directory, 'Validation_Results')
 
         print(regression_model.summary())
-        print(regression_model.params)     # Koeffizienten
-        print(regression_model.rsquared)     # R2-Wert
 
         # Grafische Darstellung des Ergebnisses
-        parameters = regression_model.params
-        # generate x-values for your regression line (two is sufficient)
-        x = np.arange(0, 350000)
-        # scatter-plot data
-        ax = df_final.plot(x='Total', y='Mean', kind='scatter')
-        # plot regression line on the same axes, set x-axis limits
-        try:
-            ax.plot(x, parameters.Intercept + parameters.Total * x)
-        except AttributeError:
-            ax.plot(x, parameters.Total * x)
-        plt.title('Regression Results')
-        plt.show()
+        vis.visualize_regression_results(df_final, regression_model)
         vis.savefig(model_directory, 'Regression_Results')
 
         # Abspeichern der Regressionsergebnisse als .csv
@@ -262,7 +229,8 @@ def main():
 
         # Erweiterung um Überprüfung der Annahmen der Regression
         cls = diagnostics.Linear_Reg_Diagnostic(regression_model)
-        fig, ax = cls()
+        cls()
+        vis.savefig(model_directory, 'model_assumptions')
 
     # Logger abschalten
     logging.shutdown()
