@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from scipy import stats
+import logging
 
 
 def show_boxplot(y, data, title):
@@ -39,6 +40,8 @@ def calc_outliers_with_z_score(data, column):
 
 def print_outliers_from_z_score(z_scores, threshold, column):
     print("Outliers in Column", column + ":", np.where(z_scores > threshold))
+    logging.info("Anzahl der Ausreißer über dem Treshhold von %i sind %i .",
+                 threshold, len(np.where(z_scores > threshold)-1))
 
 
 def calc_and_print_outliers_with_iqr(data, column, threshold=1.5):
@@ -53,6 +56,8 @@ def calc_outliers_with_iqr(data, column, threshold):
     upper = data[column] >= (q3 + threshold*iqr)
     # Below Lower bound
     lower = data[column] <= (q1 - threshold*iqr)
+    logging.info('Anzahl der Ausreißer über dem Treshhold %i .', upper)
+    logging.info("Anzahl der Ausreißer unter dem Treshhold %i .", lower)
     return upper, lower
 
 
@@ -72,3 +77,5 @@ def print_num_of_flats(data, column, threshold=0):
     df[column + '_diff'] = df[column].diff()
     print("Flats in column", column + ":",
           df[df[column + '_diff'].abs() <= threshold])
+    logging.info('Die Anzahl an Flats der Spalte %s sind %i.', column,
+                 len(df[df[column + '_diff'].abs() <= threshold]))

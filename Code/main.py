@@ -20,27 +20,25 @@ import data_visualization as vis
 import outlier_analysis as outlier
 import regression as reg
 import linear_regression_diagnostics as diagnostics
+import logging_config as clog
 
 
 def main():
 
     # Konfigurationsdatei laden
-    config_filepath = r'D:\HS Albstadt\Sommersemester 2022' \
-        r'\Python Applied Models\Abschlussaufgabe\Data\Input\Config.json'
-    config = c.load_config(config_filepath)
+    nils_filepath = r"C:\Users\heimb\Documents\GitHub\AppliedModels\\"
+    christian_filepath = r'D:\HS Albstadt\Sommersemester 2022' \
+        r'\Python Applied Models\Abschlussaufgabe\\'
+
+    filepath = nils_filepath+r"Data\Input\Config.json"
+    config = c.load_config(filepath)
 
     # Neues Run-Directory anlegen
     run_directory = c.create_run_directory(config)
 
     # Logger anlegen
-    logger = logging.getLogger()
-    while logger.hasHandlers():
-        logger.removeHandler(logger.handlers[0])
-    logging.basicConfig(format='%(levelname)s:%(asctime)s %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p',
-                        filename=os.path.join(run_directory,
-                                              config['Log_Filename']),
-                        level=logging.INFO)
+    clog.start_logger(run_directory=run_directory, config=config)
+
     logging.info('Das Dashboard wurde gestartet.')
     logging.info('Die Konfigurationsparameter wurden erfolgreich eingelesen.')
     logging.info('Das Run-Directory wurde erfolgreich angelegt.')
@@ -74,70 +72,109 @@ def main():
     # Verlauf von Temperatur
     vis.show_scatterplot(x='Year', y='Mean', data=df_merged,
                          title='Year vs. Mean')
-    vis.savefig(run_directory, 'plot1')
+    vis.savefig(run_directory, 'Scatterplot Year vs Mean')
+    logging.info('Scatterplot der Temperatur wurde erstellt und abgespeichert.')
 
     # Temperaturwerte über 800 entfernen (Jahre 1928 & 1984)
     df_final = df_merged[(df_merged.Mean) < 800]
+    logging.info('Ausreißer des Means über 800 werden entfernt.')
 
     # Verlauf der Temperatur
     vis.show_scatterplot(x='Year', y='Mean', data=df_final,
                          title='Year vs. Mean after outlier removal')
-    vis.savefig(run_directory, 'plot2')
+    vis.savefig(run_directory, 'Scatterplot Year vs Mean after outlier '
+                'removal')
+    logging.info('Scatterplot der Temperatur ohne Ausreißer wurde erstellt und'
+                 ' abgespeichert.')
 
     # Verlauf von CO2-Emissionen
     vis.show_scatterplot(x='Year', y='Total', data=df_final,
                          title='Year vs. Total CO2-Emissions of Germany')
-    vis.savefig(run_directory, 'plot3')
+    vis.savefig(run_directory, 'Scatterplot Year vs Total CO2-Emissions of '
+                'Germany')
+    logging.info('Scatterplot der CO2-Emissionen wurde erstellt und '
+                 'abgespeichert.')
 
     # Scatterplot Temperatur vs. CO2-Emissionen
     vis.show_scatterplot(x='Total', y='Mean', data=df_final,
                          title='Yearly Temperature Deviation vs.'
                          'Total CO2-Emissions of Germany')
-    vis.savefig(run_directory, 'plot4')
+    vis.savefig(run_directory, 'Scatterplot Yearly Temperature Deviation vs'
+                'Total CO2-Emissions of Germany')
+    logging.info('Scatterplot der CO2-Emissionen und Temperatur wurde erstellt'
+                 ' und abgespeichert.')
 
     # Regressionsplot
     vis.show_regressionplot(x='Total', y='Mean', data=df_final,
                             title='Yearly Temperature Deviation vs.'
                             'Total CO2-Emissions of Germany')
-    vis.savefig(run_directory, 'plot5')
-
+    vis.savefig(run_directory, 'Yearly Temperature Deviation vs Total '
+                'CO2-Emissions of Germany ')
+    logging.info('Scatterplot der jährlichen Temepratur Abweichung vs. CO2 '
+                 '-Emissionen wurde erstellt und abgespeichert.')
     # Ausreißer (Flats und Spikes) in Daten entdecken und behandeln
     # Boxplot
     outlier.show_boxplot(y='Mean', data=df_final,
                          title='Boxplot for average yearly'
                          ' temperature deviation')
-    vis.savefig(run_directory, 'plot6')
+    vis.savefig(run_directory, 'Boxplot for average yearly temperature '
+                'deviation')
+    logging.info('Boxplot der durchschnittlichen jährlichen Temeperatur '
+                 'Abweichung wurde erstellt und abgespeichert.')
 
     outlier.show_boxplot(y='Total', data=df_final,
                          title='Boxplot for total CO2-Emissions of Germany'
                          ' per year')
-    vis.savefig(run_directory, 'plot7')
+    vis.savefig(run_directory, 'Boxplot for total CO2-Emissions of Germany'
+                ' per year')
+    logging.info('Boxplot der gesamten CO2-Emissionen von Deutschland '
+                 'wurde erstellt und abgespeichert.')
 
     # Histogramme
     outlier.show_histogramm(x='Mean', data=df_final,
                             title='Average yearly temperature deviation')
-    vis.savefig(run_directory, 'plot8')
+    vis.savefig(run_directory, 'Average yearly temperature deviation')
+    logging.info('Histogram der durchschnittlichen jährlichen Temperatur '
+                 ' Abweichungen wurde erstellt und abgespeichert.')
 
     outlier.show_histogramm(x='Total', data=df_final,
                             title='Average total CO2-Emissions of Germany'
                             ' per year')
-    vis.savefig(run_directory, 'plot9')
+    vis.savefig(run_directory, 'Average total CO2-Emissions of Germany'
+                ' per year')
+    logging.info('Histogram der gesamten CO2-Emissionen von Deutschland '
+                 'Abweichungen wurde erstellt und abgespeichert.')
 
     # Ausreißer (Spikes) mittels Z-Score
+    logging.info('Ausreißer (Spikes) werden mit Hilfe des Z-Score für die '
+                 'Spalte "Mean" errechnet.')
     outlier.calc_and_print_outliers_with_z_score(data=df_final, column='Mean')
+
+    logging.info('Ausreißer (Spikes) werden mit Hilfe des Z-Score für die '
+                 'Spalte "Total" errechnet.')
     outlier.calc_and_print_outliers_with_z_score(data=df_final, column='Total')
 
     # Ausreißer (Spikes) mittels Interquartilabstand
+    logging.info('Ausreißer (Spikes) werden mit Hilfe des Interquartil für die'
+                 ' Spalte "Total" errechnet.')
     outlier.calc_and_print_outliers_with_iqr(data=df_final, column='Mean')
+    logging.info('Ausreißer (Spikes) werden mit Hilfe des Interquantilabstands'
+                 ' für die Spalte "Total" errechnet.')
     outlier.calc_and_print_outliers_with_iqr(data=df_final, column='Total')
 
     # Suche nach Flats
+    logging.info('Die Anzahl an Flats der Spalte "Mean" werden berechnet und '
+                 'geprintet.')
     outlier.print_num_of_flats(data=df_final, column='Mean')
+
+    logging.info('Die Anzahl an Flats der Spalte "Total" werden berechnet und '
+                 'geprintet.')
     outlier.print_num_of_flats(data=df_final, column='Total')
 
     # Abspeichern zu Validierungszwecken
     filepath = os.path.join(run_directory, 'final_dataset.csv')
     df_final.to_csv(filepath)
+    logging.info('Der finale Dataframe wurde abgespeichert.')
 
     # Durchführen einer Regression (-1, um Intercept zu entfernen
     # I(Total**3) für kubischen Term)
