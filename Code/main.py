@@ -10,6 +10,7 @@ Das Hauptskript. Soll später als Jupyter-Notebook umgesetzt werden.
 import os
 import logging
 import pandas as pd
+import warnings
 
 import config as c
 import load_data as load
@@ -23,12 +24,15 @@ import logging_config as clog
 
 def main():
 
+    # Warnungen ignorieren
+    warnings.filterwarnings("ignore")
+
     # Konfigurationsdatei laden
     nils_filepath = r"C:\Users\heimb\Documents\GitHub\AppliedModels\\"
     christian_filepath = r'D:\HS Albstadt\Sommersemester 2022' \
         r'\Python Applied Models\Abschlussaufgabe\\'
 
-    filepath = nils_filepath+r"Data\Input\Config.json"
+    filepath = christian_filepath+r"Data\Input\Config.json"
     config = c.load_config(filepath)
 
     # Neues Run-Directory anlegen
@@ -71,7 +75,8 @@ def main():
     vis.show_scatterplot(x='Year', y='Mean', data=df_merged,
                          title='Year vs. Mean')
     vis.savefig(run_directory, 'Scatterplot Year vs Mean')
-    logging.info('Scatterplot der Temperatur wurde erstellt und abgespeichert.')
+    logging.info('Scatterplot der Temperatur wurde erstellt und'
+                 ' abgespeichert.')
 
     # Temperaturwerte über 800 entfernen (Jahre 1928 & 1984)
     df_final = df_merged[(df_merged.Mean) < 800]
@@ -178,8 +183,13 @@ def main():
     # I(Total**3) für kubischen Term)
     models = config["Regression_Models"]
     for key, value in models.items():
+        logging.info('Berechnung für Model %s gestartet.', key)
+        logging.info('Parameter: Formel: %s, Teilzeitraum: %s, '
+                     'Validation Sample: %s', value['Formula'],
+                     value['Teil_Zeitraeume'], value['Validation_Sample'])
         # Unterverzeichnis anlegen
         model_directory = c.create_model_directory(run_directory, key)
+        logging.info('Das Model-Directory wurde erfolgreich angelegt.')
 
         df_teil_zeitraum = df_final
         df_validation = None
@@ -190,6 +200,7 @@ def main():
         # Datensatz nach Teilzeitraum filtern
         if teil_zeitraum is not None:
             df_teil_zeitraum = df_final[df_final['Year'].isin(teil_zeitraum)]
+            logging.info('Teilzeitraum erfolgreich angelegt.')
 
         # Validation Sample
         teil_zeitraum = reg.get_teil_zeitraum_from_config(
@@ -198,10 +209,12 @@ def main():
         if teil_zeitraum is not None:
             df_validation = df_final[df_final['Year'].isin(teil_zeitraum)]
             x_val = df_validation['Total']
+            logging.info('Validation Sample erstellt.')
 
         # Regression durchführen
         regression_model = reg.fit_regression_model(config=value,
                                                     data=df_teil_zeitraum)
+        logging.info('Regressionsmodell erfolgreich erstellt.')
 
         # Validierung durchführen
         if df_validation is not None:
@@ -209,11 +222,14 @@ def main():
             # Grafische Darstellung
             vis.visualize_validation_sample(df_validation, predictions)
             vis.savefig(model_directory, 'Validation_Results')
+            logging.info('Validation durchgeführt.')
 
+        logging.info('Darstellung der Regressionsergebnisse.')
         print(regression_model.summary())
+        logging.info(regression_model.summary())
 
         # Grafische Darstellung des Ergebnisses
-        vis.visualize_regression_results(df_final, regression_model)
+        vis.visualize_regression_results(df_teil_zeitraum, regression_model)
         vis.savefig(model_directory, 'Regression_Results')
 
         # Abspeichern der Regressionsergebnisse als .csv
@@ -231,7 +247,10 @@ def main():
         cls = diagnostics.Linear_Reg_Diagnostic(regression_model)
         cls()
         vis.savefig(model_directory, 'model_assumptions')
+        logging.info('Plots zur Überprüfung der Modellannahmen erfolgreich'
+                     ' erstellt und abgespeichert.')
 
+    logging.info('Ende des Programms.')
     # Logger abschalten
     logging.shutdown()
 
