@@ -5,6 +5,9 @@ Erstellt am 30.06.2022
 @author: Nils Heimbach, Christian T. Seidler
 
 Das Hauptskript. Alternative zu Dashboard.ipynb.
+
+Disclaimer: Das Projekt wurde im Team bearbeitet,
+weshalb eine Abgrenzung auf einzelne Beiträge nicht möglich ist.
 """
 
 import os
