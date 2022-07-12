@@ -4,7 +4,7 @@ Erstellt am 02.07.2022
 
 @author: Nils Heimbach, Christian T. Seidler
 
-Funktionen zum Einlesen und Aufbereiten der Daten.
+Funktionen zum Aufbereiten der Daten.
 """
 
 import pandas as pd
