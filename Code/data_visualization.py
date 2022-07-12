@@ -53,7 +53,6 @@ def visualize_validation_sample(df_validation, predictions):
     plt.show()
 
 
-# TODO: Suchen, woher wir diese Funktion haben
 def visualize_regression_results(df, regression_model):
     """Visualisieren der Ergebnisse der Regression (gefittete Funktion,
     sowie die Datenpunkte)."""
