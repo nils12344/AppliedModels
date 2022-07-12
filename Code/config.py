@@ -4,7 +4,7 @@ Erstellt am 02.07.2022
 
 @author: Nils Heimbach, Christian T. Seidler
 
-Funktionen zur Initialisierung.
+Funktionen zur Initialisierung des Programms.
 """
 
 import json
