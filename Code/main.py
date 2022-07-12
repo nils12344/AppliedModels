@@ -4,13 +4,13 @@ Erstellt am 30.06.2022
 
 @author: Nils Heimbach, Christian T. Seidler
 
-Das Hauptskript. Soll später als Jupyter-Notebook umgesetzt werden.
+Das Hauptskript. Alternative zu Dashboard.ipynb.
 """
 
 import os
 import logging
-import pandas as pd
 import warnings
+import pandas as pd
 
 import config as c
 import load_data as load
@@ -28,11 +28,9 @@ def main():
     warnings.filterwarnings("ignore")
 
     # Konfigurationsdatei laden
-    nils_filepath = r"C:\Users\heimb\Documents\GitHub\AppliedModels\\"
-    christian_filepath = r'D:\HS Albstadt\Sommersemester 2022' \
-        r'\Python Applied Models\Abschlussaufgabe\\'
-
-    filepath = christian_filepath+r"Data\Input\Config.json"
+    filepath = r'D:\HS Albstadt\Sommersemester 2022' \
+               r'\Python Applied Models\Abschlussaufgabe' \
+               r'\Data\Input\Config.json'
     config = c.load_config(filepath)
 
     # Neues Run-Directory anlegen
@@ -45,13 +43,13 @@ def main():
     logging.info('Die Konfigurationsparameter wurden erfolgreich eingelesen.')
     logging.info('Das Run-Directory wurde erfolgreich angelegt.')
 
-    # Fossil-Fuel-Daten einlesen
-    df_fossil_fuel = load.load_fossil_fuel_data_to_dataframe(config)
+    # Fossil-Fuel-Daten einlesen und vorbereiten
+    df_fossil_fuel = load.load_fossil_fuel_data_as_dataframe(config)
     df_fossil_fuel = prep.prepare_fossil_fuel_dataframe(config, df_fossil_fuel)
     print(df_fossil_fuel.shape)
     logging.info('Die CO2-Daten wurden erfolgreich eingelesen.')
 
-    # Temperaturdaten einlesen
+    # Temperaturdaten einlesen und vorbereiten
     df_temperature = load.load_temperature_dataframe(config)
     df_temperature = prep.prepare_temperature_dataframe(config, df_temperature)
     print(df_temperature.shape)
@@ -64,14 +62,14 @@ def main():
     print(df_merged)
     logging.info('Die Datensätze wurden erfolgreich zusammengeführt.')
 
-    # Tabelle zur Validierung in Datei abspeichern (.csv)
+    # Zusammengefügten Datensatz zur Validierung in Datei abspeichern (.csv)
     filepath = os.path.join(run_directory, 'merged_dataset.csv')
     df_merged.to_csv(filepath)
     logging.info('Der zusammengeführte Datensatz wurde unter %s'
                  ' gespeichert.', filepath)
 
     # Visualisierung von CO2-Daten und Temperaturabweichung
-    # Verlauf von Temperatur
+    # Verlauf der Temperatur
     vis.show_scatterplot(x='Year', y='Mean', data=df_merged,
                          title='Year vs. Mean')
     vis.savefig(run_directory, 'Scatterplot Year vs Mean')
@@ -90,7 +88,7 @@ def main():
     logging.info('Scatterplot der Temperatur ohne Ausreißer wurde erstellt und'
                  ' abgespeichert.')
 
-    # Verlauf von CO2-Emissionen
+    # Verlauf der CO2-Emissionen
     vis.show_scatterplot(x='Year', y='Total', data=df_final,
                          title='Year vs. Total CO2-Emissions of Germany')
     vis.savefig(run_directory, 'Scatterplot Year vs Total CO2-Emissions of '
@@ -115,6 +113,7 @@ def main():
                 'CO2-Emissions of Germany ')
     logging.info('Scatterplot der jährlichen Temepratur Abweichung vs. CO2 '
                  '-Emissionen wurde erstellt und abgespeichert.')
+
     # Ausreißer (Flats und Spikes) in Daten entdecken und behandeln
     # Boxplot
     outlier.show_boxplot(y='Mean', data=df_final,
@@ -168,19 +167,18 @@ def main():
     # Suche nach Flats
     logging.info('Die Anzahl an Flats der Spalte "Mean" werden berechnet und '
                  'geprintet.')
-    outlier.print_num_of_flats(data=df_final, column='Mean')
+    outlier.print_num_of_flats(data=df_final, column='Mean', threshold=0.005)
 
     logging.info('Die Anzahl an Flats der Spalte "Total" werden berechnet und '
                  'geprintet.')
-    outlier.print_num_of_flats(data=df_final, column='Total')
+    outlier.print_num_of_flats(data=df_final, column='Total', threshold=100)
 
-    # Abspeichern zu Validierungszwecken
+    # Abspeichern des finalen Datensatzes zu Validierungszwecken
     filepath = os.path.join(run_directory, 'final_dataset.csv')
     df_final.to_csv(filepath)
     logging.info('Der finale Dataframe wurde abgespeichert.')
 
-    # Durchführen einer Regression (-1, um Intercept zu entfernen
-    # I(Total**3) für kubischen Term)
+    # Durchführen der Regressionen
     models = config["Regression_Models"]
     for key, value in models.items():
         logging.info('Berechnung für Model %s gestartet.', key)
@@ -202,7 +200,7 @@ def main():
             df_teil_zeitraum = df_final[df_final['Year'].isin(teil_zeitraum)]
             logging.info('Teilzeitraum erfolgreich angelegt.')
 
-        # Validation Sample
+        # Validierungssample bestimmen
         teil_zeitraum = reg.get_teil_zeitraum_from_config(
             value['Validation_Sample'])
         # Extra Datensatz für Validierungssample
@@ -244,7 +242,7 @@ def main():
                                            filename=filename+'_Summary.csv')
 
         # Erweiterung um Überprüfung der Annahmen der Regression
-        cls = diagnostics.Linear_Reg_Diagnostic(regression_model)
+        cls = diagnostics.LinearRegDiagnostic(regression_model)
         cls()
         vis.savefig(model_directory, 'model_assumptions')
         logging.info('Plots zur Überprüfung der Modellannahmen erfolgreich'

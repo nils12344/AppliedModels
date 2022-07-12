@@ -4,12 +4,14 @@ Erstellt am 02.07.2022
 
 @author: Prajwal Kafle
 
-Quelle: https://www.statsmodels.org/dev/examples/notebooks/generated/linear_regression_diagnostics_plots.html
+Quelle: https://www.statsmodels.org/dev/examples/notebooks/generated
+/linear_regression_diagnostics_plots.html
 
 Klasse zur Überprüfung, ob die Annahmen der Regression erfüllt sind.
 """
 
 
+from typing import Type
 import statsmodels
 import pandas as pd
 import numpy as np
@@ -18,12 +20,9 @@ from statsmodels.tools.tools import maybe_unwrap_results
 from statsmodels.graphics.gofplots import ProbPlot
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 import matplotlib.pyplot as plt
-from typing import Type
-
-style_talk = 'seaborn-talk'    # refer to plt.style.available
 
 
-class Linear_Reg_Diagnostic():
+class LinearRegDiagnostic():
     """
     Diagnostic plots to identify potential problems in a linear regression fit.
     Mainly,
@@ -41,7 +40,8 @@ class Linear_Reg_Diagnostic():
     """
 
     def __init__(self,
-                 results: Type[statsmodels.regression.linear_model.RegressionResultsWrapper]) -> None:
+                 results: Type[statsmodels.regression.linear_model
+                               .RegressionResultsWrapper]) -> None:
         """
         For a linear regression model, generates following diagnostic plots:
 
@@ -55,7 +55,8 @@ class Linear_Reg_Diagnostic():
         e. vif
 
         Args:
-            results (Type[statsmodels.regression.linear_model.RegressionResultsWrapper]):
+            results (Type[statsmodels.regression
+                          .linear_model.RegressionResultsWrapper]):
                 must be instance of statsmodels.regression.linear_model object
 
         Raises:
@@ -72,8 +73,8 @@ class Linear_Reg_Diagnostic():
         >>> cls = Linear_Reg_Diagnostic(res)
         >>> cls(plot_context="seaborn-paper")
 
-        In case you do not need all plots you can also independently make an individual plot/table
-        in following ways
+        In case you do not need all plots you can also independently make
+        an individual plot/table in following ways
 
         >>> cls = Linear_Reg_Diagnostic(res)
         >>> cls.residual_plot()
@@ -83,8 +84,11 @@ class Linear_Reg_Diagnostic():
         >>> cls.vif_table()
         """
 
-        if isinstance(results, statsmodels.regression.linear_model.RegressionResultsWrapper) is False:
-            raise TypeError("result must be instance of statsmodels.regression.linear_model.RegressionResultsWrapper object")
+        if isinstance(results, statsmodels.regression.linear_model
+                      .RegressionResultsWrapper) is False:
+            raise TypeError("result must be instance of statsmodels"
+                            ".regression.linear_model.RegressionResultsWrapper"
+                            " object")
 
         self.results = maybe_unwrap_results(results)
 
@@ -103,23 +107,23 @@ class Linear_Reg_Diagnostic():
     def __call__(self, plot_context='seaborn-paper'):
         # print(plt.style.available)
         with plt.style.context(plot_context):
-            fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(10,10))
-            self.residual_plot(ax=ax[0,0])
-            self.qq_plot(ax=ax[0,1])
-            self.scale_location_plot(ax=ax[1,0])
-            self.leverage_plot(ax=ax[1,1])
+            fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
+            self.residual_plot(ax=ax[0, 0])
+            self.qq_plot(ax=ax[0, 1])
+            self.scale_location_plot(ax=ax[1, 0])
+            self.leverage_plot(ax=ax[1, 1])
             plt.show()
 
         # self.vif_table()
         return fig, ax
-
 
     def residual_plot(self, ax=None):
         """
         Residual vs Fitted Plot
 
         Graphical tool to identify non-linearity.
-        (Roughly) Horizontal red line is an indicator that the residual has a linear pattern
+        (Roughly) Horizontal red line is an indicator that the residual
+        has a linear pattern
         """
         if ax is None:
             fig, ax = plt.subplots()
@@ -166,7 +170,8 @@ class Linear_Reg_Diagnostic():
         for r, i in enumerate(abs_norm_resid_top_3):
             ax.annotate(
                 i,
-                xy=(np.flip(QQ.theoretical_quantiles, 0)[r], self.residual_norm[i]),
+                xy=(np.flip(QQ.theoretical_quantiles, 0)[r],
+                    self.residual_norm[i]),
                 ha='right', color='C3')
 
         ax.set_title('Normal Q-Q', fontweight="bold")
@@ -186,7 +191,7 @@ class Linear_Reg_Diagnostic():
 
         residual_norm_abs_sqrt = np.sqrt(np.abs(self.residual_norm))
 
-        ax.scatter(self.y_predict, residual_norm_abs_sqrt, alpha=0.5);
+        ax.scatter(self.y_predict, residual_norm_abs_sqrt, alpha=0.5)
         sns.regplot(
             x=self.y_predict,
             y=residual_norm_abs_sqrt,
@@ -205,15 +210,15 @@ class Linear_Reg_Diagnostic():
                 color='C3')
         ax.set_title('Scale-Location', fontweight="bold")
         ax.set_xlabel('Fitted values')
-        ax.set_ylabel(r'$\sqrt{|\mathrm{Standardized\ Residuals}|}$');
+        ax.set_ylabel(r'$\sqrt{|\mathrm{Standardized\ Residuals}|}$')
         return ax
 
     def leverage_plot(self, ax=None):
         """
         Residual vs Leverage plot
 
-        Points falling outside Cook's distance curves are considered observation that can sway the fit
-        aka are influential.
+        Points falling outside Cook's distance curves are considered
+        observation that can sway the fit aka are influential.
         Good to have none outside the curves.
         """
         if ax is None:
@@ -222,7 +227,7 @@ class Linear_Reg_Diagnostic():
         ax.scatter(
             self.leverage,
             self.residual_norm,
-            alpha=0.5);
+            alpha=0.5)
 
         sns.regplot(
             x=self.leverage,
@@ -239,11 +244,12 @@ class Linear_Reg_Diagnostic():
             ax.annotate(
                 i,
                 xy=(self.leverage[i], self.residual_norm[i]),
-                color = 'C3')
+                color='C3')
 
-        xtemp, ytemp = self.__cooks_dist_line(0.5) # 0.5 line
-        ax.plot(xtemp, ytemp, label="Cook's distance", lw=1, ls='--', color='red')
-        xtemp, ytemp = self.__cooks_dist_line(1) # 1 line
+        xtemp, ytemp = self.__cooks_dist_line(0.5)  # 0.5 line
+        ax.plot(xtemp, ytemp, label="Cook's distance", lw=1, ls='--',
+                color='red')
+        xtemp, ytemp = self.__cooks_dist_line(1)  # 1 line
         ax.plot(xtemp, ytemp, lw=1, ls='--', color='red')
 
         ax.set_xlim(0, max(self.leverage)+0.01)
@@ -263,12 +269,12 @@ class Linear_Reg_Diagnostic():
         """
         vif_df = pd.DataFrame()
         vif_df["Features"] = self.xvar_names
-        vif_df["VIF Factor"] = [variance_inflation_factor(self.xvar, i) for i in range(self.xvar.shape[1])]
+        vif_df["VIF Factor"] = [variance_inflation_factor(self.xvar, i) for i
+                                in range(self.xvar.shape[1])]
 
         print(vif_df
-                .sort_values("VIF Factor")
-                .round(2))
-
+              .sort_values("VIF Factor")
+              .round(2))
 
     def __cooks_dist_line(self, factor):
         """
